@@ -36,164 +36,111 @@ export default function MusicPlayer({ isOpen, onClose, darkMode }) {
 
   const currentTrack = musicFiles[currentTrackIndex];
 
-  const bgColor = darkMode ? "bg-[#1e293b]" : "bg-[#a3cef1]";
-  const textColor = darkMode ? "text-blue-300" : "text-blue-900";
-  const buttonHoverBg = darkMode ? "hover:bg-blue-700" : "hover:bg-blue-400";
+
 
   if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
-      {isOpen && (
+    <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div className="flex-1 flex items-center justify-center p-8">
         <motion.div
-          initial={{ opacity: 0, scale: 0.85, y: 20 }}
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.85, y: 20 }}
-          transition={{ duration: 0.35, ease: "easeInOut" }}
-          className={`absolute bottom-16 left-4 right-4 max-w-md mx-auto rounded-2xl shadow-lg flex flex-col z-50 ${bgColor} backdrop-blur-md transition-all duration-300`}
-          style={{ overflow: "hidden" }}
-          aria-label="Calm music player"
-          role="region"
-          tabIndex={0}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 w-full max-w-md border border-gray-200 dark:border-gray-700"
         >
-          {/* Header */}
-          <div
-            className="flex items-center justify-between px-4 py-2 cursor-move select-none"
-            style={{ userSelect: "none" }}
-          >
-            <h3
-              className={`font-semibold text-lg truncate ${textColor} select-none`}
-            >
-              🎵 Calm Music Player
-            </h3>
-
-            <div className="flex space-x-2">
-              {/* Minimize/Maximize Button */}
-              <motion.button
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setIsMinimized(!isMinimized)}
-                aria-label={isMinimized ? "Maximize player" : "Minimize player"}
-                className={`p-1 rounded ${textColor} ${buttonHoverBg} transition-colors`}
-              >
-                {isMinimized ? (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="w-5 h-5"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M4 4h16v16H4z" />
-                  </svg>
-                ) : (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="w-5 h-5"
-                    viewBox="0 0 24 24"
-                  >
-                    <line x1="4" y1="12" x2="20" y2="12" />
-                  </svg>
-                )}
-              </motion.button>
-
-              {/* Close Button */}
-              <motion.button
-                whileHover={{ scale: 1.2, rotate: 90 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={onClose}
-                aria-label="Close player"
-                className={`p-1 rounded ${textColor} ${buttonHoverBg} transition-colors`}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-5 h-5"
-                  viewBox="0 0 24 24"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
+            {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="bg-gray-800 rounded-full w-12 h-12 flex items-center justify-center shadow-lg">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
                 </svg>
-              </motion.button>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Calm Music
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                  Relaxing sounds for your mind
+                </p>
+              </div>
+            </div>
+
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={onClose}
+              className="p-2 rounded-xl text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 
+                hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </motion.button>
+          </div>
+
+          {/* Track Info */}
+          <div className="text-center mb-8">
+            <div className="bg-gray-100 dark:bg-gray-800 
+              rounded-2xl p-6 mb-6 border border-gray-200 dark:border-gray-700">
+              <div className="text-6xl mb-4">🎵</div>
+              <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                Calm Track {currentTrackIndex + 1}
+              </h4>
+              <p className="text-gray-600 dark:text-gray-400">
+                Peaceful melodies for relaxation
+              </p>
             </div>
           </div>
 
-          {/* Player Body */}
-          <AnimatePresence>
-            {!isMinimized && (
-              <motion.div
-                key="player-body"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.3 }}
-                className="flex flex-col flex-1 items-center justify-center px-6 space-y-4"
-              >
-                <audio
-                  key={currentTrack}
-                  src={currentTrack}
-                  controls
-                  autoPlay
-                  className="w-full rounded-md
-                             focus:outline-none focus:ring-2 focus:ring-blue-400
-                             accent-blue-500 dark:accent-blue-300"
-                />
+          {/* Audio Player */}
+          <div className="mb-8">
+            <audio
+              key={currentTrack}
+              src={currentTrack}
+              controls
+              autoPlay
+              className="w-full rounded-xl shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500
+                accent-gray-800 dark:accent-gray-600"
+              style={{
+                filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))'
+              }}
+            />
+          </div>
 
-                <div className="flex space-x-8">
-                  <motion.button
-                    whileHover={{ scale: 1.15 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={prevTrack}
-                    aria-label="Previous track"
-                    className={`px-5 py-2 rounded border border-blue-500 ${textColor} ${buttonHoverBg} transition-colors font-medium`}
-                  >
-                    ⏮ Prev
-                  </motion.button>
+          {/* Controls */}
+          <div className="flex justify-center gap-4">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={prevTrack}
+              className="flex items-center gap-2 px-6 py-3 bg-gray-800 hover:bg-gray-900 
+                text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200
+                focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+              </svg>
+              Previous
+            </motion.button>
 
-                  <motion.button
-                    whileHover={{ scale: 1.15 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={nextTrack}
-                    aria-label="Next track"
-                    className={`px-5 py-2 rounded border border-blue-500 ${textColor} ${buttonHoverBg} transition-colors font-medium`}
-                  >
-                    Next ⏭
-                  </motion.button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Minimized view: just a small bar */}
-          <AnimatePresence>
-            {isMinimized && (
-              <motion.div
-                key="minimized"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className={`flex items-center justify-center h-14 px-4`}
-              >
-                <p className={`${textColor} font-medium truncate`}>
-                  Now Playing: Track {currentTrackIndex + 1}
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={nextTrack}
+              className="flex items-center gap-2 px-6 py-3 bg-gray-800 hover:bg-gray-900 
+                text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200
+                focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            >
+              Next
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+              </svg>
+            </motion.button>
+          </div>
         </motion.div>
-      )}
-    </AnimatePresence>
+      </div>
+    </div>
   );
 }

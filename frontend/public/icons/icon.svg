@@ -1,0 +1,28 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1f2937;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="url(#grad1)"/>
+  
+  <!-- Stethoscope Icon -->
+  <g fill="white" transform="translate(128, 128) scale(2)">
+    <!-- Main tube -->
+    <path d="M64 64c0-17.7-14.3-32-32-32S0 46.3 0 64v64c0 53 43 96 96 96s96-43 96-96V64c0-17.7-14.3-32-32-32s-32 14.3-32 32v64c0 17.7-14.3 32-32 32s-32-14.3-32-32V64z"/>
+    
+    <!-- Chest piece -->
+    <circle cx="96" cy="192" r="32" fill="white"/>
+    <circle cx="96" cy="192" r="16" fill="#1e40af"/>
+    
+    <!-- Earpieces -->
+    <circle cx="32" cy="32" r="16" fill="white"/>
+    <circle cx="160" cy="32" r="16" fill="white"/>
+  </g>
+  
+  <!-- App name -->
+  <text x="256" y="400" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white">MyDoc AI</text>
+</svg>

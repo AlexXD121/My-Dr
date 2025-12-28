@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  postgres:
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mydoc_staging}
+      POSTGRES_USER: ${POSTGRES_USER:-mydoc_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+
+  redis:
+    volumes:
+      - redis_staging_data:/data
+
+  backend:
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-mydoc_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-mydoc_staging}
+      - REDIS_URL=redis://redis:6379
+      - ENVIRONMENT=staging
+      - LOG_LEVEL=INFO
+    volumes: []  # No volume mounts in staging
+
+  frontend:
+    environment:
+      - NODE_ENV=staging
+
+volumes:
+  postgres_staging_data:
+  redis_staging_data:

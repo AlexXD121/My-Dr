@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyDoc AI - System Health Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+        
+        .dashboard {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .status-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #28a745;
+        }
+        
+        .status-card.warning {
+            border-left-color: #ffc107;
+        }
+        
+        .status-card.critical {
+            border-left-color: #dc3545;
+        }
+        
+        .status-card h3 {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .status-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+        
+        .status-label {
+            font-size: 0.875rem;
+            color: #666;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .chart-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .alerts-section {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .alerts-section h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .alert-item {
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            border-left: 4px solid #ffc107;
+            background-color: #fff3cd;
+        }
+        
+        .alert-item.critical {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        
+        .alert-time {
+            font-size: 0.75rem;
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+        
+        .alert-message {
+            font-weight: 500;
+        }
+        
+        .refresh-indicator {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .refresh-indicator.show {
+            opacity: 1;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                padding: 1rem;
+            }
+            
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MyDoc AI - System Health Dashboard</h1>
+        <p>Real-time monitoring and performance metrics</p>
+    </div>
+    
+    <div class="refresh-indicator" id="refreshIndicator">
+        Refreshing data...
+    </div>
+    
+    <div class="dashboard">
+        <div id="loading" class="loading">
+            Loading system health data...
+        </div>
+        
+        <div id="error" class="error" style="display: none;">
+            Failed to load system health data. Please check your connection and try again.
+        </div>
+        
+        <div id="dashboard-content" style="display: none;">
+            <!-- Status Cards -->
+            <div class="status-grid">
+                <div class="status-card" id="health-card">
+                    <h3>Overall Health</h3>
+                    <div class="status-value" id="health-score">--</div>
+                    <div class="status-label" id="health-status">Loading...</div>
+                </div>
+                
+                <div class="status-card" id="cpu-card">
+                    <h3>CPU Usage</h3>
+                    <div class="status-value" id="cpu-usage">--%</div>
+                    <div class="status-label">Current utilization</div>
+                </div>
+                
+                <div class="status-card" id="memory-card">
+                    <h3>Memory Usage</h3>
+                    <div class="status-value" id="memory-usage">--%</div>
+                    <div class="status-label">Current utilization</div>
+                </div>
+                
+                <div class="status-card" id="response-card">
+                    <h3>Response Time</h3>
+                    <div class="status-value" id="response-time">--ms</div>
+                    <div class="status-label">Average response time</div>
+                </div>
+                
+                <div class="status-card" id="error-card">
+                    <h3>Error Rate</h3>
+                    <div class="status-value" id="error-rate">--%</div>
+                    <div class="status-label">Current error rate</div>
+                </div>
+                
+                <div class="status-card" id="requests-card">
+                    <h3>Requests/Min</h3>
+                    <div class="status-value" id="requests-per-min">--</div>
+                    <div class="status-label">Current request rate</div>
+                </div>
+            </div>
+            
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>System Resources</h3>
+                    <canvas id="resourceChart" width="400" height="200"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>Response Time Trend</h3>
+                    <canvas id="responseChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+            
+            <!-- Alerts -->
+            <div class="alerts-section">
+                <h3>Recent Alerts</h3>
+                <div id="alerts-container">
+                    <p>No recent alerts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        class HealthDashboard {
+            constructor() {
+                this.refreshInterval = 30000; // 30 seconds
+                this.charts = {};
+                this.data = {
+                    cpu: [],
+                    memory: [],
+                    responseTime: [],
+                    timestamps: []
+                };
+                this.maxDataPoints = 20;
+                
+                this.init();
+            }
+            
+            async init() {
+                try {
+                    await this.loadInitialData();
+                    this.initCharts();
+                    this.startAutoRefresh();
+                    this.showDashboard();
+                } catch (error) {
+                    this.showError();
+                }
+            }
+            
+            async loadInitialData() {
+                const response = await fetch('/monitoring/health');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch health data');
+                }
+                
+                const healthData = await response.json();
+                this.updateHealthCards(healthData);
+                
+                // Load alerts
+                const alertsResponse = await fetch('/monitoring/alerts?period_hours=24');
+                if (alertsResponse.ok) {
+                    const alertsData = await alertsResponse.json();
+                    this.updateAlerts(alertsData.alerts);
+                }
+            }
+            
+            updateHealthCards(data) {
+                const components = data.components;
+                
+                // Overall health
+                document.getElementById('health-score').textContent = data.health_score;
+                document.getElementById('health-status').textContent = data.status;
+                this.updateCardStatus('health-card', data.health_score, 75, 90);
+                
+                // Application metrics
+                if (components.application) {
+                    const app = components.application;
+                    document.getElementById('cpu-usage').textContent = `${app.cpu_percent.toFixed(1)}%`;
+                    document.getElementById('memory-usage').textContent = `${app.memory_percent.toFixed(1)}%`;
+                    document.getElementById('response-time').textContent = `${app.response_time_ms.toFixed(0)}ms`;
+                    document.getElementById('error-rate').textContent = `${app.error_rate.toFixed(2)}%`;
+                    
+                    this.updateCardStatus('cpu-card', app.cpu_percent, 60, 80);
+                    this.updateCardStatus('memory-card', app.memory_percent, 70, 85);
+                    this.updateCardStatus('response-card', app.response_time_ms, 500, 1000);
+                    this.updateCardStatus('error-card', app.error_rate, 2, 5);
+                }
+                
+                // Update chart data
+                const now = new Date();
+                this.data.timestamps.push(now.toLocaleTimeString());
+                this.data.cpu.push(components.application?.cpu_percent || 0);
+                this.data.memory.push(components.application?.memory_percent || 0);
+                this.data.responseTime.push(components.application?.response_time_ms || 0);
+                
+                // Keep only recent data points
+                if (this.data.timestamps.length > this.maxDataPoints) {
+                    this.data.timestamps.shift();
+                    this.data.cpu.shift();
+                    this.data.memory.shift();
+                    this.data.responseTime.shift();
+                }
+                
+                this.updateCharts();
+            }
+            
+            updateCardStatus(cardId, value, warningThreshold, criticalThreshold) {
+                const card = document.getElementById(cardId);
+                card.className = 'status-card';
+                
+                if (value >= criticalThreshold) {
+                    card.classList.add('critical');
+                } else if (value >= warningThreshold) {
+                    card.classList.add('warning');
+                }
+            }
+            
+            updateAlerts(alerts) {
+                const container = document.getElementById('alerts-container');
+                
+                if (!alerts || alerts.length === 0) {
+                    container.innerHTML = '<p>No recent alerts</p>';
+                    return;
+                }
+                
+                container.innerHTML = alerts.slice(0, 10).map(alert => `
+                    <div class="alert-item ${alert.severity}">
+                        <div class="alert-time">${new Date(alert.timestamp).toLocaleString()}</div>
+                        <div class="alert-message">${alert.message}</div>
+                    </div>
+                `).join('');
+            }
+            
+            initCharts() {
+                // Resource chart
+                const resourceCtx = document.getElementById('resourceChart').getContext('2d');
+                this.charts.resource = new Chart(resourceCtx, {
+                    type: 'line',
+                    data: {
+                        labels: this.data.timestamps,
+                        datasets: [
+                            {
+                                label: 'CPU %',
+                                data: this.data.cpu,
+                                borderColor: '#dc3545',
+                                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Memory %',
+                                data: this.data.memory,
+                                borderColor: '#007bff',
+                                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        }
+                    }
+                });
+                
+                // Response time chart
+                const responseCtx = document.getElementById('responseChart').getContext('2d');
+                this.charts.response = new Chart(responseCtx, {
+                    type: 'line',
+                    data: {
+                        labels: this.data.timestamps,
+                        datasets: [
+                            {
+                                label: 'Response Time (ms)',
+                                data: this.data.responseTime,
+                                borderColor: '#28a745',
+                                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        }
+                    }
+                });
+            }
+            
+            updateCharts() {
+                if (this.charts.resource) {
+                    this.charts.resource.data.labels = this.data.timestamps;
+                    this.charts.resource.data.datasets[0].data = this.data.cpu;
+                    this.charts.resource.data.datasets[1].data = this.data.memory;
+                    this.charts.resource.update('none');
+                }
+                
+                if (this.charts.response) {
+                    this.charts.response.data.labels = this.data.timestamps;
+                    this.charts.response.data.datasets[0].data = this.data.responseTime;
+                    this.charts.response.update('none');
+                }
+            }
+            
+            startAutoRefresh() {
+                setInterval(async () => {
+                    try {
+                        this.showRefreshIndicator();
+                        await this.loadInitialData();
+                        this.hideRefreshIndicator();
+                    } catch (error) {
+                        console.error('Failed to refresh data:', error);
+                        this.hideRefreshIndicator();
+                    }
+                }, this.refreshInterval);
+            }
+            
+            showRefreshIndicator() {
+                document.getElementById('refreshIndicator').classList.add('show');
+            }
+            
+            hideRefreshIndicator() {
+                document.getElementById('refreshIndicator').classList.remove('show');
+            }
+            
+            showDashboard() {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'none';
+                document.getElementById('dashboard-content').style.display = 'block';
+            }
+            
+            showError() {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboard-content').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+        
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new HealthDashboard();
+        });
+    </script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import { motion } from "framer-motion";
 
 export default function Meditation({ isOpen, onClose, darkMode }) {
   const [duration, setDuration] = useState(5);
@@ -83,28 +84,7 @@ export default function Meditation({ isOpen, onClose, darkMode }) {
 
   if (!isOpen) return null;
 
-  // Colors updated to soft pastels & harmonious
-  const bgColor = darkMode
-    ? "bg-gradient-to-tr from-gray-900 via-gray-800 to-gray-700"
-    : "bg-gradient-to-tr from-indigo-100 via-purple-100 to-pink-100";
-  const textColor = darkMode ? "text-indigo-200" : "text-purple-900";
-  const inputTextColor = darkMode ? "text-indigo-100" : "text-purple-700";
 
-  const buttonBase =
-    "px-5 py-2 rounded-xl font-semibold transition-transform duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-400";
-
-  // Soft pastel button colors with hover scale & lighten effect
-  const buttonPrimary = darkMode
-    ? "bg-indigo-700 text-indigo-100 hover:bg-indigo-600 hover:scale-105"
-    : "bg-purple-400 text-purple-900 hover:bg-purple-300 hover:scale-105";
-
-  const buttonSecondary = darkMode
-    ? "bg-purple-700 text-purple-200 hover:bg-purple-600 hover:scale-105"
-    : "bg-pink-300 text-pink-900 hover:bg-pink-200 hover:scale-105";
-
-  const buttonStop = darkMode
-    ? "bg-red-600 text-red-100 hover:bg-red-500 hover:scale-105"
-    : "bg-red-400 text-red-900 hover:bg-red-300 hover:scale-105";
 
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60)
@@ -115,138 +95,179 @@ export default function Meditation({ isOpen, onClose, darkMode }) {
   };
 
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30 backdrop-blur-sm"
-      aria-modal="true"
-      role="dialog"
-      aria-labelledby="meditation-title"
-      tabIndex={-1}
-    >
-      <div
-        className={`${bgColor} ${textColor} max-w-md w-full rounded-3xl shadow-2xl p-8
-          transform transition-transform duration-400 ease-in-out
-          hover:shadow-3xl
-          flex flex-col relative
-          `}
-      >
-        {/* Close Button */}
-        <button
-          onClick={() => {
-            if (audioRef.current) {
-              audioRef.current.pause();
-              audioRef.current.currentTime = 0;
-            }
-            clearInterval(intervalRef.current);
-            setIsRunning(false);
-            onClose();
-          }}
-          aria-label="Close meditation"
-          className="absolute top-5 right-5 p-2 rounded-full text-xl text-opacity-60 hover:text-opacity-100
-          transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+    <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div className="flex-1 flex items-center justify-center p-8">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 w-full max-w-lg border border-gray-200 dark:border-gray-700 relative"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-6 h-6"
-            viewBox="0 0 24 24"
-          >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
-
-        <h3
-          id="meditation-title"
-          className="font-extrabold text-2xl mb-6 select-none tracking-wide"
-        >
-          🧘 Guided Meditation
-        </h3>
-
-        {!isRunning ? (
-          <>
-            <label
-              htmlFor="meditation-timer"
-              className={`mb-3 block font-semibold select-none ${inputTextColor} tracking-wide`}
-            >
-              Set your meditation timer (minutes):
-            </label>
-            <input
-              id="meditation-timer"
-              type="number"
-              min="1"
-              max="60"
-              value={duration}
-              onChange={(e) =>
-                setDuration(Math.max(1, Math.min(60, +e.target.value)))
-              }
-              ref={inputRef}
-              disabled={isRunning}
-              className={`w-full p-3 rounded-xl border border-transparent
-                focus:outline-none focus:ring-4 focus:ring-purple-300
-                bg-white text-purple-900 shadow-md
-                dark:bg-gray-800 dark:text-indigo-100
-                ${inputTextColor}`}
-              aria-label="Meditation timer in minutes"
-            />
-            <button
-              onClick={startMeditation}
-              disabled={isRunning}
-              className={`${buttonBase} ${buttonPrimary} mt-8 w-full`}
-            >
-              Start Meditation
-            </button>
-          </>
-        ) : (
-          <>
-            <p className="mb-6 text-center select-none tracking-wide text-lg font-semibold">
-              Meditation in progress. Relax and focus on your breath.
-            </p>
-            <div
-              aria-live="polite"
-              aria-atomic="true"
-              className="text-center text-6xl font-mono font-extrabold text-purple-600 dark:text-purple-300 mb-8 select-text tracking-wider"
-            >
-              {formatTime(secondsLeft)}
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="bg-gray-800 rounded-full w-12 h-12 flex items-center justify-center shadow-lg">
+                <span className="text-2xl">🧘</span>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Meditation
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                  Find your inner peace
+                </p>
+              </div>
             </div>
 
-            <div className="flex justify-center gap-6">
-              <button
-                onClick={togglePause}
-                className={`${buttonBase} ${buttonSecondary} w-1/2`}
-              >
-                {isRunning ? "⏸ Pause" : "▶️ Resume"}
-              </button>
-              <button
-                onClick={() => {
-                  clearInterval(intervalRef.current);
-                  setIsRunning(false);
-                  setSecondsLeft(null);
-                  if (audioRef.current) {
-                    audioRef.current.pause();
-                    audioRef.current.currentTime = 0;
-                  }
-                  onClose();
-                }}
-                className={`${buttonBase} ${buttonStop} w-1/2`}
-              >
-                ✖️ Stop & Close
-              </button>
-            </div>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                if (audioRef.current) {
+                  audioRef.current.pause();
+                  audioRef.current.currentTime = 0;
+                }
+                clearInterval(intervalRef.current);
+                setIsRunning(false);
+                onClose();
+              }}
+              className="p-2 rounded-xl text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 
+                hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </motion.button>
+          </div>
 
-            <audio
-              ref={audioRef}
-              src="/music/meditation3.mp3"
-              autoPlay
-              loop
-              muted={false}
-              style={{ display: "none" }}
-            />
-          </>
-        )}
+          {!isRunning ? (
+            <div className="text-center">
+              {/* Duration Selector */}
+              <div className="mb-8">
+                <label className="block text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Choose your meditation duration
+                </label>
+                <div className="bg-gray-100 dark:bg-gray-800 
+                  rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+                  <input
+                    id="meditation-timer"
+                    type="range"
+                    min="1"
+                    max="60"
+                    value={duration}
+                    onChange={(e) => setDuration(parseInt(e.target.value))}
+                    ref={inputRef}
+                    className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer 
+                      dark:bg-gray-700 slider"
+                    style={{
+                      background: `linear-gradient(to right, #374151 0%, #374151 ${(duration/60)*100}%, #e5e7eb ${(duration/60)*100}%, #e5e7eb 100%)`
+                    }}
+                  />
+                  <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mt-2">
+                    <span>1 min</span>
+                    <span className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                      {duration} minutes
+                    </span>
+                    <span>60 min</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Duration Buttons */}
+              <div className="grid grid-cols-3 gap-3 mb-8">
+                {[5, 10, 15].map((mins) => (
+                  <motion.button
+                    key={mins}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setDuration(mins)}
+                    className={`py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
+                      duration === mins
+                        ? 'bg-gray-800 text-white shadow-lg'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {mins}m
+                  </motion.button>
+                ))}
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={startMeditation}
+                className="w-full py-4 bg-gray-800 hover:bg-gray-900 text-white 
+                  rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200
+                  focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              >
+                Begin Meditation
+              </motion.button>
+            </div>
+          ) : (
+            <div className="text-center">
+              {/* Timer Display */}
+              <div className="mb-8">
+                <div className="bg-gray-100 dark:bg-gray-800 
+                  rounded-3xl p-8 border border-gray-200 dark:border-gray-700 mb-6">
+                  <div className="text-7xl font-mono font-bold text-gray-800 dark:text-gray-200 mb-4">
+                    {formatTime(secondsLeft)}
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div 
+                      className="bg-gray-800 dark:bg-gray-600 h-2 rounded-full transition-all duration-1000"
+                      style={{ width: `${((duration * 60 - secondsLeft) / (duration * 60)) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+                <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
+                  Breathe deeply and focus on the present moment
+                </p>
+              </div>
+
+              {/* Controls */}
+              <div className="flex gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={togglePause}
+                  className="flex-1 py-3 bg-gray-800 hover:bg-gray-900 text-white 
+                    rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200
+                    focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                >
+                  {isRunning ? "⏸ Pause" : "▶️ Resume"}
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    clearInterval(intervalRef.current);
+                    setIsRunning(false);
+                    setSecondsLeft(null);
+                    if (audioRef.current) {
+                      audioRef.current.pause();
+                      audioRef.current.currentTime = 0;
+                    }
+                    onClose();
+                  }}
+                  className="flex-1 py-3 bg-gray-600 hover:bg-gray-700 text-white 
+                    rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200
+                    focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                >
+                  Stop
+                </motion.button>
+              </div>
+
+              <audio
+                ref={audioRef}
+                src="/music/meditation3.mp3"
+                autoPlay
+                loop
+                muted={false}
+                style={{ display: "none" }}
+              />
+            </div>
+          )}
+        </motion.div>
       </div>
     </div>
   );

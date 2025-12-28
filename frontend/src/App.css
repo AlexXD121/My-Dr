@@ -1,12 +1,15 @@
 /* Add this at the top or to your existing CSS file */
 body {
   margin: 0;
-  background: linear-gradient(to bottom right, #00aaff, #0077be);
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-  background-size: cover;
-  font-family: system-ui, sans-serif;
-  color: white;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #F8F9FA;
+  color: #1A1A1A;
+  line-height: 1.6;
+}
+
+.dark body {
+  background-color: #111827;
+  color: #F8F9FA;
 }
 
 @keyframes slideUp {
