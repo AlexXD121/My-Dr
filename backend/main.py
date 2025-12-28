@@ -14,6 +14,8 @@ from config import settings
 from database import get_db
 from validation import ChatRequest, ChatResponse
 from middleware import security_middleware
+from groq import Groq  # Import Groq
+
 from auth_middleware import auth_middleware, get_current_user, require_auth, require_verified_email, check_rate_limit
 from mydoc import ask_mydoc
 from medical_api import router as medical_router
@@ -118,6 +120,8 @@ app.add_middleware(
 
 # CORS middleware with restricted origins
 allowed_origins = [origin.strip() for origin in settings.allowed_origins.split(',') if origin.strip()]
+if "http://localhost:5173" not in allowed_origins:
+    allowed_origins.append("http://localhost:5173")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -224,13 +228,11 @@ async def test_chat(chat_request: ChatRequest):
         print(f"Test chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# Working chat endpoint with Jan AI
+# Working chat endpoint with Groq API
 @app.post("/simple-chat")
 async def simple_chat(chat_request: ChatRequest):
-    """Simple chat endpoint that works with Jan AI"""
+    """Simple chat endpoint that works with Groq API"""
     try:
-        import requests
-        
         # Build medical system prompt
         system_prompt = """You are MyDoc AI, a helpful medical assistant. You provide accurate, helpful medical information while being empathetic and professional. 
 
@@ -243,59 +245,29 @@ IMPORTANT GUIDELINES:
 
 Remember: Always recommend consulting healthcare professionals for proper diagnosis and treatment."""
 
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": chat_request.message}
-        ]
+        client = Groq(api_key=settings.groq_api_key)
+
+        print(f"🤖 Calling Groq API with model {settings.groq_model}")
         
-        payload = {
-            "model": settings.jan_model,
-            "messages": messages,
-            "temperature": 0.3,
-            "max_tokens": 400,
-            "stream": False
-        }
-        
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.jan_api_key}"
-        }
-        
-        print(f"🤖 Calling Jan AI at {settings.jan_url}")
-        
-        response = requests.post(
-            f"{settings.jan_url}/v1/chat/completions",
-            json=payload,
-            headers=headers,
-            timeout=60  # Increased timeout to handle slower responses
+        completion = client.chat.completions.create(
+            model=settings.groq_model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": chat_request.message}
+            ],
+            temperature=0.3,
+            max_tokens=400,
+            stream=False
         )
         
-        if response.status_code == 200:
-            result = response.json()
-            
-            if "choices" in result and len(result["choices"]) > 0:
-                reply = result["choices"][0]["message"]["content"].strip()
-                print(f"✅ Jan AI response received: {len(reply)} characters")
-                
-                return ChatResponse(
-                    reply=reply,
-                    timestamp=datetime.utcnow().isoformat(),
-                    mood_analysis={}
-                )
-            else:
-                print(f"❌ No choices in response: {result}")
-                return ChatResponse(
-                    reply="I received an unexpected response format. Please try again.",
-                    timestamp=datetime.utcnow().isoformat(),
-                    mood_analysis={}
-                )
-        else:
-            print(f"❌ Jan AI error: {response.status_code} - {response.text}")
-            return ChatResponse(
-                reply="I'm having trouble connecting to my AI service right now. Please try again in a moment. If this is urgent, please consult with a healthcare professional directly. 🩺",
-                timestamp=datetime.utcnow().isoformat(),
-                mood_analysis={}
-            )
+        reply = completion.choices[0].message.content.strip()
+        print(f"✅ Groq response received: {len(reply)} characters")
+        
+        return ChatResponse(
+            reply=reply,
+            timestamp=datetime.utcnow().isoformat(),
+            mood_analysis={}
+        )
             
     except Exception as ai_error:
         print(f"⚠️ Simple chat AI service error: {ai_error}")
@@ -305,41 +277,33 @@ Remember: Always recommend consulting healthcare professionals for proper diagno
             mood_analysis={}
         )
 
-# Test Jan AI connectivity
-@app.get("/test-jan-ai")
-async def test_jan_ai():
-    """Test Jan AI connectivity"""
+
+# Test Groq connectivity
+@app.get("/test-groq")
+async def test_groq():
+    """Test Groq connectivity"""
     try:
-        import requests
+        client = Groq(api_key=settings.groq_api_key)
         
-        # Test models endpoint
-        response = requests.get(
-            f"{settings.jan_url}/v1/models",
-            headers={"Authorization": f"Bearer {settings.jan_api_key}"},
-            timeout=5
+        # Simple test call
+        completion = client.chat.completions.create(
+            model=settings.groq_model,
+            messages=[{"role": "user", "content": "Hello"}],
+            max_tokens=10
         )
         
-        if response.status_code == 200:
-            models = response.json()
-            return {
-                "status": "connected",
-                "jan_url": settings.jan_url,
-                "models_available": len(models.get("data", [])),
-                "configured_model": settings.jan_model
-            }
-        else:
-            return {
-                "status": "error",
-                "jan_url": settings.jan_url,
-                "error": f"HTTP {response.status_code}: {response.text}"
-            }
+        return {
+            "status": "connected",
+            "model": settings.groq_model,
+            "response": completion.choices[0].message.content
+        }
             
     except Exception as e:
         return {
             "status": "error",
-            "jan_url": settings.jan_url,
             "error": str(e)
         }
+
 
 
 # Chat endpoint - supports both authenticated and demo users
@@ -435,10 +399,8 @@ async def chat(
         db.add(user_message)
         db.flush()  # Get the message ID without committing
         
-        # Get AI medical response using direct Jan AI call
+        # Get AI medical response using Groq API
         try:
-            import requests
-            
             # Build medical system prompt
             system_prompt = """You are MyDoc AI, a helpful medical assistant. You provide accurate, helpful medical information while being empathetic and professional. 
 
@@ -451,39 +413,22 @@ IMPORTANT GUIDELINES:
 
 Remember: Always recommend consulting healthcare professionals for proper diagnosis and treatment."""
 
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": chat_request.message}
-            ]
+            client = Groq(api_key=settings.groq_api_key)
             
-            payload = {
-                "model": settings.jan_model,
-                "messages": messages,
-                "temperature": 0.3,
-                "max_tokens": 400,
-                "stream": False
-            }
-            
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {settings.jan_api_key}"
-            }
-            
-            print(f"🤖 Calling Jan AI at {settings.jan_url}")
-            response = requests.post(
-                f"{settings.jan_url}/v1/chat/completions",
-                json=payload,
-                headers=headers,
-                timeout=60  # Increased timeout to handle slower responses
+            print(f"🤖 Calling Groq API using model {settings.groq_model}")
+            completion = client.chat.completions.create(
+                model=settings.groq_model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": chat_request.message}
+                ],
+                temperature=0.3,
+                max_tokens=400,
+                stream=False
             )
             
-            if response.status_code == 200:
-                result = response.json()
-                reply = result["choices"][0]["message"]["content"].strip()
-                print(f"✅ Jan AI response received: {len(reply)} characters")
-            else:
-                print(f"❌ Jan AI error: {response.status_code} - {response.text}")
-                reply = f"I'm having trouble connecting to my AI service right now. Please try again in a moment. If this is urgent, please consult with a healthcare professional directly. 🩺"
+            reply = completion.choices[0].message.content.strip()
+            print(f"✅ Groq response received: {len(reply)} characters")
                 
         except Exception as ai_error:
             print(f"⚠️ AI service error: {ai_error}")
@@ -496,8 +441,8 @@ Remember: Always recommend consulting healthcare professionals for proper diagno
             sender="ai",
             timestamp=datetime.utcnow(),
             sequence_number=sequence_number + 1,
-            ai_model=settings.jan_model,
-            ai_provider="jan_ai",
+            ai_model=settings.groq_model,
+            ai_provider="groq",
             confidence_score=0.8,
             response_time_ms=0,
             emergency_flag=False,
@@ -506,7 +451,7 @@ Remember: Always recommend consulting healthcare professionals for proper diagno
                 "urgency_score": 1,
                 "validation_result": "valid",
                 "quality_score": 0.8,
-                "ai_provider": "jan_ai",
+                "ai_provider": "groq",
                 "emergency_level": "none",
                 "medical_disclaimers": ["This is an AI assistant. Always consult healthcare professionals for medical advice."]
             }

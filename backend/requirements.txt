@@ -17,3 +17,5 @@ cryptography
 python-magic
 pillow
 reportlab
+
+groq

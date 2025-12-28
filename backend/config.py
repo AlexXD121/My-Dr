@@ -41,10 +41,10 @@ class Settings(BaseSettings):
     allowed_origins: str = Field("http://localhost:5173,http://localhost:3000", description="Allowed CORS origins")
     
     # AI Configuration
-    use_local_ai: bool = Field(True, description="Use local AI models (Jan AI)")
-    jan_url: str = Field("http://localhost:1337", description="Jan AI API URL")
-    jan_model: str = Field("Llama-3_2-3B-Instruct-IQ4_XS", description="Jan AI model name")
-    jan_api_key: str = Field("mydoc-ai-key", description="Jan AI API key")
+    # Groq Configuration
+    groq_api_key: str = Field(..., description="Groq API key")
+    groq_model: str = Field("llama-3.3-70b-versatile", description="Groq model name")
+
     
     # Fallback API providers
     perplexity_api_key: str = Field("", description="Perplexity API key (fallback)")
@@ -103,7 +103,7 @@ def load_settings() -> Settings:
         # Log configuration summary (without sensitive data)
         logger.info(f"Loaded configuration for environment: {settings.environment}")
         logger.info(f"Debug mode: {settings.debug}")
-        logger.info(f"Local AI enabled: {settings.use_local_ai}")
+        logger.info(f"Groq Model: {settings.groq_model}")
         
         return settings
         

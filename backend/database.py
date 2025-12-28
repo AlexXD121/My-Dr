@@ -165,7 +165,9 @@ def create_session_factory():
 
 
 def init_database():
-    """Initialize database tables"""
+    """Initialize database tables with automatic SQLite fallback"""
+    global engine
+    
     try:
         engine = create_database_engine()
         
@@ -177,6 +179,26 @@ def init_database():
         
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
+        
+        # Automatic Fallback to SQLite
+        if not str(settings.database_url).startswith("sqlite"):
+            logger.warning("⚠️ Primary database failed. Falling back to local SQLite database (Demo Mode)")
+            try:
+                # Force SQLite URL
+                settings.database_url = "sqlite:///./mydoc.db"
+                
+                # Reset engine
+                engine = None 
+                engine = create_database_engine()
+                
+                # Try creating tables again
+                Base.metadata.create_all(bind=engine)
+                logger.info("✅ Fallback to SQLite successful!")
+                return True
+            except Exception as fallback_error:
+                logger.error(f"❌ Fallback failed: {fallback_error}")
+                return False
+                
         return False
 
 
